@@ -1,6 +1,6 @@
-import pyfits
+import astropy.io.fits as pyfits
 from numpy import *
-import pywcs
+import astropy.wcs as pywcs
 import sys
 
 class FitMosaicSources:
@@ -37,7 +37,7 @@ class FitMosaicSources:
             if self.usexy:
                 sx,sy=[ra],[dec]
             else:
-                sx,sy=self.wcs.wcs_sky2pix(ra,dec,0)
+                sx,sy=self.wcs.wcs_world2pix([ra],[dec],0)
         #    print sx[0],sy[0]
 
             self.centers.append([sx[0],sy[0]])
@@ -134,10 +134,14 @@ class FitMosaicSources:
 
         self.fluxes=x[:]
 
-        self.flux_errors=[variance[c[0],c[1]]**0.5 for c in self.centers]
-
         print self.centers
-        print c,variance[c[0],c[1]].shape
+        #print variance
+        for c in self.centers:
+            print c,c[0],c[1],variance[int(c[0]),int(c[1])]**0.5 
+
+        self.flux_errors=[variance[int(c[0]),int(c[1])]**0.5 for c in self.centers]
+
+        #print c,variance[c[0],c[1]].shape
 
         minf = opt.last_optimum_value()
         print "optimum at ", x
@@ -186,4 +190,5 @@ class FitMosaicSources:
             spectra.append(concatenate(([self.e1,self.e2],self.fluxes,self.flux_errors)))
         
         savetxt("spectra.txt",spectra)
+        self.spectra=spectra
 
